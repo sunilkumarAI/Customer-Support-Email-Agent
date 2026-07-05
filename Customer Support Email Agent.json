@@ -1,0 +1,382 @@
+{
+  "name": "Customer Support Email Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -496,
+        -224
+      ],
+      "id": "fef55dd8-4056-4c2b-a913-7961a36cd3af",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "inbMIfXRfOJoozbR",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.snippet }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Customer Service",
+              "description": "Emails from customers containing questions, complaints, support requests, order issues, refund/return requests, product inquiries, billing problems, or any message that requires a response or action from the support team. Includes emails asking for help, reporting a problem, or seeking information about products/services/orders."
+            },
+            {
+              "category": "other",
+              "description": "Emails that are not customer support related, including newsletters, marketing/promotional emails, automated notifications (account access alerts, security alerts, system updates), social media notifications, internal team emails, spam, or any message that does not require a customer support response."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        -288,
+        -224
+      ],
+      "id": "2ef4a8d5-81cd-4a4f-8cfb-7a899dd7e6ed",
+      "name": "Text Classifier"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3.1-flash-lite",
+        "options": {
+          "maxTokens": 2050
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        -368,
+        -16
+      ],
+      "id": "018b7d49-f9d4-4ef7-81bc-291fde02a68d",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "xFYExGfTIMb3txKF",
+          "name": "OpenRouter account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.snippet }}",
+        "options": {
+          "systemMessage": "=You are a professional customer support assistant for [Your Company Name]. Your job is to read incoming customer emails and write clear, helpful, and polite email replies on behalf of the support team.\n\n## Your Role\n- You respond only to genuine customer service emails (order issues, complaints, refunds, product questions, billing problems, etc.).\n- You must sound like a real human support agent — warm, empathetic, professional, and solution-oriented.\n- Never sound robotic or overly formal. Avoid generic corporate filler.\n\n## How to Respond\n1. Read the customer's email carefully and identify:\n   - Their main issue or question\n   - Any order numbers, account details, or specifics they mentioned\n   - Their emotional tone (frustrated, confused, neutral, etc.)\n2. If you have access to a knowledge base or lookup tool, use it to find accurate information (policies, order details, product info) before answering. Do not guess or make up information you cannot verify.\n3. Acknowledge the customer's issue first, briefly show empathy if they're frustrated, then provide a clear resolution or next steps.\n4. If you cannot fully resolve the issue (e.g., missing information, needs human escalation), clearly state what additional information is needed or that it's being escalated.\n5. Keep replies concise — ideally 3 to 6 sentences unless the issue requires more detail.\n6. Always end with a polite closing offering further help.\n\n## Output Format\nRespond with a ready-to-send email reply only. Do not include explanations of your reasoning, labels, or meta-commentary — just the final email text.\n\nFormat:\nSubject: Re: [original subject or relevant subject]\n\nSubject: Re: Issue with my recent order #45892\n\n\n###Example email(reference)\nHi Priya,\n\nI'm really sorry to hear you received a mouse instead of the wireless keyboard you ordered — that's definitely not the experience we want for you, especially since you need it for work.\n\nI've located your order (#45892) and I'm arranging for the correct keyboard to be shipped out today with expedited delivery at no extra cost. You can keep the mouse you received, no need to return it. You'll get a shipping confirmation with tracking within the next few hours.\n\nIf you'd prefer a refund instead of a replacement, just reply and let us know — happy to process that instead.\n\nThanks for your patience, Priya!\n\nBest regards,\nSupport Team\n\n[Greeting],\n\n[Body of the response]\n\n[Closing],\n[Support Team Name]\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        128,
+        -224
+      ],
+      "id": "b80b1899-cce2-4687-bf6c-ecc71846c21e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": "google/gemini-3.1-flash-lite",
+        "options": {
+          "maxTokens": 2050
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        0,
+        -16
+      ],
+      "id": "51c376c7-d9b2-42e6-8643-92cc84ae8280",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "xFYExGfTIMb3txKF",
+          "name": "OpenRouter account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "call this when anything releted to Customer service policy",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "demo1",
+          "mode": "list",
+          "cachedResultName": "demo1"
+        },
+        "options": {
+          "pineconeNamespace": "FAQ"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        224,
+        -16
+      ],
+      "id": "a7bad195-f296-4417-a0a4-96a0817249c8",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "2z8Z0bGUPxMZgwx4",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "dimensions": 512
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        176
+      ],
+      "id": "2301ae55-1716-4767-9ef5-862876f2d456",
+      "name": "Embeddings OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "H5qtaXTGf9S9QSjr",
+          "name": "n8n free OpenAI API credits"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "reply",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "emailType": "text",
+        "message": "={{ $('AI Agent').item.json.output }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        -192
+      ],
+      "id": "665d95af-6634-4c32-9340-29c84aef2d76",
+      "name": "Reply to a message",
+      "webhookId": "0beef4be-fa7d-4100-99f9-935c832d8c79",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "inbMIfXRfOJoozbR",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Gmail Trigger').item.json.id }}",
+        "labelIds": [
+          "Label_584607804667309168"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        512,
+        -208
+      ],
+      "id": "163e1fe3-5c59-40d2-8244-5796ee9eeb8b",
+      "name": "Add label to message",
+      "webhookId": "638a330f-5cd8-49a8-9a2d-705294795c9e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "inbMIfXRfOJoozbR",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Gmail Trigger": [
+      {
+        "json": {
+          "id": "19f220e893121c5d",
+          "threadId": "19f220e893121c5d",
+          "snippet": "Hi Support Team, I placed an order last week (Order #45892) for a wireless keyboard, but I received the wrong item — a mouse was delivered instead. I need this resolved quickly as I need the keyboard",
+          "payload": {
+            "mimeType": "multipart/alternative"
+          },
+          "sizeEstimate": 7673,
+          "historyId": "4012",
+          "internalDate": "1782982791000",
+          "labels": [
+            {
+              "id": "INBOX",
+              "name": "INBOX"
+            },
+            {
+              "id": "IMPORTANT",
+              "name": "IMPORTANT"
+            },
+            {
+              "id": "CATEGORY_PERSONAL",
+              "name": "CATEGORY_PERSONAL"
+            },
+            {
+              "id": "UNREAD",
+              "name": "UNREAD"
+            }
+          ],
+          "From": "\"BANDA SUNIL KUMAR,CSE-DS 2023 Vel Tech, Chennai\" <vtu25014@veltech.edu.in>",
+          "Subject": "Subject: Issue with my recent order #45892",
+          "To": "imagegrok66@gmail.com"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Text Classifier",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text Classifier": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        [
+          {
+            "node": "Reply to a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "05f2ecf7-c17b-4c94-ab3d-264bc42593d9",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4848f11bdf9700eb80e93279f5d73609a197e057a83fb597980f48d734e69a69"
+  },
+  "nodeGroups": [],
+  "id": "YF8tHUBd856QIXu0",
+  "tags": [
+    {
+      "name": "Email",
+      "id": "24EnDxZID4HeOrDo",
+      "updatedAt": "2026-07-02T08:41:17.661Z",
+      "createdAt": "2026-07-02T08:41:17.661Z"
+    },
+    {
+      "updatedAt": "2026-06-21T04:54:04.249Z",
+      "createdAt": "2026-06-21T04:54:04.249Z",
+      "id": "CHhzK8TRXzrOlOmf",
+      "name": "Agents"
+    },
+    {
+      "updatedAt": "2026-07-01T04:05:21.882Z",
+      "createdAt": "2026-07-01T04:05:21.882Z",
+      "id": "lac8MzJ6b930oUHy",
+      "name": "RAG"
+    }
+  ]
+}
